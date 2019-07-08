@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ddphin.ddphin.synchronizer.mapper.ESVersionMapper">
+
+	<insert id="replaceList" parameterType="ESVersionBean">
+		replace into es_version (
+			     `index`
+			   , `id`
+			   , `seqNo`
+			   , `primaryTerm`)
+		values
+		<foreach collection="list" item="item" index="index" separator=",">
+		       (
+				 #{item.index}
+			   , #{item.id}
+			   , #{item.seqNo}
+			   , #{item.primaryTerm})
+		</foreach>
+	</insert>
+
+	<insert id="insertLogList" parameterType="ESVersionLogBean">
+		insert into es_version_log (
+				 `index`
+			   , `id`
+			   , `context`
+			   , `message`
+			   , `status`
+			   , `seqNo`
+			   , `primaryTerm`)
+		values
+		<foreach collection="list" item="item" index="index" separator=",">
+			   (
+			     #{item.index}
+			   , #{item.id}
+			   , #{item.context}
+			   , #{item.message}
+			   , #{item.status}
+			   , #{item.seqNo}
+			   , #{item.primaryTerm})
+		</foreach>
+	</insert>
+
+	<sql id="defaultQueryStatement">
+		select `id`
+			 , `index`
+		     , `seqNo`
+			 , `primaryTerm`
+		from es_version
+		where `index` = #{index} and `id` = #{id}
+	</sql>
+
+	<select id="query" resultType="ESVersion" parameterType="ESVersionBean">
+		<include refid="defaultQueryStatement"/>
+	</select>
+
+</mapper>
