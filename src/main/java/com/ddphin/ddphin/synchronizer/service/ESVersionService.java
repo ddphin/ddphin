@@ -16,7 +16,6 @@ import java.util.List;
  */
 
 public interface ESVersionService {
-    ESVersion query(ESVersionBean t);
     Integer replaceList(List<ESVersionBean> t);
     Integer insertLogList(List<ESVersionLogBean> t);
 }

@@ -1,4 +1,4 @@
-package com.ddphin.ddphin.synchronizer.service;
+package com.ddphin.ddphin.synchronizer.requester;
 
 import java.io.IOException;
 

@@ -2,6 +2,8 @@ package com.ddphin.ddphin.collector.entity;
 
 import lombok.Data;
 
+import java.util.Map;
+
 /**
  * ClassName: ESSyncItemOutputItemHas
  * Function:  ESSyncItemOutputItemHas

@@ -1,8 +1,6 @@
 package com.ddphin.ddphin.collector.interceptor;
 
-import com.ddphin.ddphin.common.util.ServiceLocale;
 import com.ddphin.ddphin.transmitor.BulkRequestBodyTransmitor;
-import com.ddphin.ddphin.transmitor.CustomizedBulkRequestBodyTransmitor;
 import com.ddphin.ddphin.collector.context.ContextHolder;
 import com.ddphin.ddphin.collector.requestbody.RequestBodyBuilder;
 import org.springframework.lang.Nullable;
@@ -19,7 +17,16 @@ import java.io.IOException;
  * Author     DaintyDolphin
  * Version    V1.0
  */
+
 public class SynchronizerInterceptor implements HandlerInterceptor {
+    private RequestBodyBuilder requestBodyBuilder;
+    private BulkRequestBodyTransmitor bulkRequestBodyTransmitor;
+
+    public SynchronizerInterceptor(RequestBodyBuilder requestBodyBuilder, BulkRequestBodyTransmitor bulkRequestBodyTransmitor) {
+        this.bulkRequestBodyTransmitor = bulkRequestBodyTransmitor;
+        this.requestBodyBuilder = requestBodyBuilder;
+    }
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         ContextHolder.remove();
@@ -29,21 +36,9 @@ public class SynchronizerInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable Exception ex) throws IOException {
         if (null == ex) {
-            String body = this.getRequestBodyBuilder().buildBulkRequestBody();
-            this.getBulkRequestBodyTransmitor().transmit(body);
+            String body = requestBodyBuilder.buildBulkRequestBody();
+            bulkRequestBodyTransmitor.transmit(body);
         }
         ContextHolder.remove();
-    }
-
-    private BulkRequestBodyTransmitor getBulkRequestBodyTransmitor() {
-        BulkRequestBodyTransmitor transmitor =
-                (CustomizedBulkRequestBodyTransmitor) ServiceLocale.findService(CustomizedBulkRequestBodyTransmitor.class);
-        if (null == transmitor) {
-            transmitor = (BulkRequestBodyTransmitor) ServiceLocale.findService(BulkRequestBodyTransmitor.class);
-        }
-        return transmitor;
-    }
-    private RequestBodyBuilder getRequestBodyBuilder() {
-        return (RequestBodyBuilder) ServiceLocale.findService(RequestBodyBuilder.class);
     }
 }

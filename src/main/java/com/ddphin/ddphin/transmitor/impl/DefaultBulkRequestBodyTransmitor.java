@@ -1,9 +1,7 @@
 package com.ddphin.ddphin.transmitor.impl;
 
-import com.ddphin.ddphin.common.util.ServiceLocale;
-import com.ddphin.ddphin.synchronizer.service.ESRequester;
+import com.ddphin.ddphin.synchronizer.requester.ESRequester;
 import com.ddphin.ddphin.transmitor.BulkRequestBodyTransmitor;
-import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
@@ -14,11 +12,15 @@ import java.io.IOException;
  * Author     DaintyDolphin
  * Version    V1.0
  */
-@Service
+
 public class DefaultBulkRequestBodyTransmitor implements BulkRequestBodyTransmitor {
+    private ESRequester esRequester;
+
+    public DefaultBulkRequestBodyTransmitor(ESRequester esRequester) {
+        this.esRequester = esRequester;
+    }
     @Override
     public void transmit(String bulkRequestBody) throws IOException {
-        ESRequester esRequester = (ESRequester) ServiceLocale.findService(ESRequester.class);
         esRequester.bulkRequest(bulkRequestBody);
     }
 }

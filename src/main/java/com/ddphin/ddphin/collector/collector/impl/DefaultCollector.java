@@ -2,50 +2,40 @@ package com.ddphin.ddphin.collector.collector.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.ddphin.ddphin.collector.collector.Collector;
-import com.ddphin.ddphin.collector.configuration.CollectorProperties;
 import com.ddphin.ddphin.collector.context.*;
 import com.ddphin.ddphin.collector.entity.ESSyncItemOutputItem;
 import com.ddphin.ddphin.collector.entity.ESSyncItemOutputItemHas;
-import com.ddphin.ddphin.collector.mybatis.SQLExecutor;
+import com.ddphin.ddphin.collector.entity.ESSyncProperties;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.ResultMap;
 import org.apache.ibatis.mapping.SqlCommandType;
+import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.session.RowBounds;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * CollectorImpl
- *
- * @Date     2019/7/8 下午3:04
- * @Author   ddphin
+ * ClassName: DefaultCollector
+ * Function:  DefaultCollector
+ * Date:      2019/7/3 下午4:22
+ * Author     DaintyDolphin
+ * Version    V1.0
  */
-@Service
-public class CollectorImpl implements Collector {
+public class DefaultCollector implements Collector {
+    private Map<String, ESSyncItemOutputItem> outputMap;
+    private Map<String, String> inputR = new HashMap<>();
 
-    @Autowired
-    private CollectorProperties properties;
-    @Autowired
-    private SQLExecutor sqlExecutor;
+    public DefaultCollector(ESSyncProperties properties) {
+        this.outputMap = properties.getOutput();
+        properties.getInput().forEach((key, value) -> this.inputR.put(value, key));
+    }
 
-    /**
-     * collect
-     *
-     * @Date     2019/7/8 下午3:04
-     * @Author   ddphin
-     *
-     * @param    object
-     * @param    output
-     * @param    executor
-     * @param    ms
-     * @return   void
-     */
     @Override
     public void collect(
             Object object,
@@ -54,24 +44,13 @@ public class CollectorImpl implements Collector {
             MappedStatement ms) throws SQLException {
         ESEntry entity = this.initCurrentEntity(output, object, ms.getSqlCommandType());
 
-        this.collect(entity, output, properties, executor, ms);
+        this.collect(entity, output, executor, ms);
     }
 
-    /**
-     * initCurrentEntity
-     *
-     * @Date     2019/7/8 下午3:04
-     * @Author   ddphin
-     *
-     * @param    output
-     * @param    object
-     * @param    operation
-     * @return   ESEntry
-     */
     private ESEntry initCurrentEntity(String output, Object object, SqlCommandType operation) {
-       JSONObject json = (JSONObject) JSONObject.toJSON(object);
+        JSONObject json = (JSONObject) JSONObject.toJSON(object);
 
-        ESSyncItemOutputItem outputItem = properties.getOutput().get(output);
+        ESSyncItemOutputItem outputItem = this.outputMap.get(output);
 
         ESEntry entity = new ESEntry(operation);
         Map<Object, ESEntry> map = ContextHolder.get().getAssociation().computeIfAbsent(output, o -> new HashMap<>());
@@ -84,19 +63,9 @@ public class CollectorImpl implements Collector {
         return entity;
     }
 
-    /**
-     * initAssociationEntity
-     *
-     * @Date     2019/7/8 下午3:05
-     * @Author   ddphin
-     *
-     * @param    output
-     * @param    object
-     * @return   ESEntry
-     */
     private ESEntry initAssociationEntity(String output, ESEntry object) {
-        ESSyncItemOutputItem item = properties.getOutput().get(output);
-        ESSyncItemOutputItem associationItem = properties.getOutput().get(item.getAssociation().getBelongs().getTo());
+        ESSyncItemOutputItem item = this.outputMap.get(output);
+        ESSyncItemOutputItem associationItem = this.outputMap.get(item.getAssociation().getBelongs().getTo());
 
         Map<Object, ESEntry> map = ContextHolder.get().getAssociation().computeIfAbsent(item.getAssociation().getBelongs().getTo(), o -> new HashMap<>());
         ESEntry entity = map.computeIfAbsent(object.getWithOfBelongs(), o -> new ESEntry(SqlCommandType.UNKNOWN));
@@ -119,35 +88,20 @@ public class CollectorImpl implements Collector {
         }
         return entity;
     }
-
-    /**
-     * collect
-     *
-     * @Date     2019/7/8 下午3:05
-     * @Author   ddphin
-     *
-     * @param    entity
-     * @param    output
-     * @param    properties
-     * @param    executor
-     * @param    ms
-     * @return   void
-     */
     private void collect(ESEntry entity,
                          String output,
-                         CollectorProperties properties,
                          Executor executor,
                          MappedStatement ms) throws SQLException {
-        ESSyncItemOutputItem outputItem = properties.getOutput().get(output);
+        ESSyncItemOutputItem outputItem = this.outputMap.get(output);
 
         if (null != outputItem.getAssociation()) {
-            if (!this.mergeESEntryAssociation(entity, output, properties, executor, ms)) {
+            if (!this.mergeESEntryAssociation(entity, output, executor, ms)) {
                 return;
             }
 
             Map<Object, Object> datamap = ContextHolder.get().getData().computeIfAbsent(outputItem.getAssociation().getBelongs().getTo(), o -> new HashMap<>());
             ESNestedEntry association = (ESNestedEntry) datamap.computeIfAbsent(entity.getWithOfBelongs(), o -> new ESNestedEntry(outputItem.getAssociation().getBelongs().getTo(), SqlCommandType.UNKNOWN));
-            ESSyncItemOutputItem associationItem = properties.getOutput().get(outputItem.getAssociation().getBelongs().getTo());
+            ESSyncItemOutputItem associationItem = this.outputMap.get(outputItem.getAssociation().getBelongs().getTo());
 
             ESSyncItemOutputItemHas.WithType withType = associationItem.getHas().get(output).getWithType();
             if (ESSyncItemOutputItemHas.WithType.primitive.equals(withType)) {
@@ -174,7 +128,7 @@ public class CollectorImpl implements Collector {
             }
 
             ESEntry associationEntity = this.initAssociationEntity(output, entity);
-            this.collect(associationEntity, outputItem.getAssociation().getBelongs().getTo(), properties, executor, ms);
+            this.collect(associationEntity, outputItem.getAssociation().getBelongs().getTo(), executor, ms);
         }
         else {
             ESNestedEntry entry = this.mergeCurrentESNestedEntryData(output, entity);
@@ -182,26 +136,12 @@ public class CollectorImpl implements Collector {
         }
     }
 
-    /**
-     * mergeESEntryAssociation
-     *
-     * @Date     2019/7/8 下午3:06
-     * @Author   ddphin
-     *
-     * @param    entity
-     * @param    output
-     * @param    properties
-     * @param    executor
-     * @param    ms
-     * @return   java.lang.Boolean
-     */
     private Boolean mergeESEntryAssociation(
             ESEntry entity,
             String output,
-            CollectorProperties properties,
             Executor executor,
             MappedStatement ms) throws SQLException {
-        ESSyncItemOutputItem outputItem = properties.getOutput().get(output);
+        ESSyncItemOutputItem outputItem = this.outputMap.get(output);
 
         if (null == entity.getWithOfBelongs()) {
             if (null == entity.getWithOfOnMissing()) {
@@ -210,7 +150,6 @@ public class CollectorImpl implements Collector {
 
             Map<String, Object> rs = this.executorQuery(
                     output,
-                    properties,
                     executor,
                     ms,
                     outputItem.getAssociation().getOnMissing().getQuery(),
@@ -224,7 +163,6 @@ public class CollectorImpl implements Collector {
         else if (null != outputItem.getReload()) {
             Map<String, Object> rs = this.executorQuery(
                     output,
-                    properties,
                     executor,
                     ms,
                     outputItem.getReload().getQuery(),
@@ -238,17 +176,6 @@ public class CollectorImpl implements Collector {
         return true;
     }
 
-    /**
-     * reloadESEntity
-     *
-     * @Date     2019/7/8 下午3:06
-     * @Author   ddphin
-     *
-     * @param    map
-     * @param    entity
-     * @param    outputItem
-     * @return   void
-     */
     private void reloadESEntity(Map<String, Object> map, ESEntry entity, ESSyncItemOutputItem outputItem) {
         entity.setKey(map.get(outputItem.getKey()));
         if (null != outputItem.getAssociation()) {
@@ -263,16 +190,6 @@ public class CollectorImpl implements Collector {
         }
     }
 
-    /**
-     * mergeCurrentESNestedEntryData
-     *
-     * @Date     2019/7/8 下午3:06
-     * @Author   ddphin
-     *
-     * @param    output
-     * @param    entity
-     * @return   ESNestedEntry
-     */
     private ESNestedEntry mergeCurrentESNestedEntryData(String output, ESEntry entity) {
         Map<Object, Object> currentMap = ContextHolder.get().getData().computeIfAbsent(output, o -> new HashMap<>());
         ESNestedEntry current = (ESNestedEntry) currentMap.computeIfAbsent(entity.getKey(), o -> new ESNestedEntry(output, entity.getOperation()));
@@ -284,17 +201,6 @@ public class CollectorImpl implements Collector {
         }
         return current;
     }
-
-    /**
-     * mergeCurrentESPrimitiveEntryData
-     *
-     * @Date     2019/7/8 下午3:06
-     * @Author   ddphin
-     *
-     * @param    output
-     * @param    entity
-     * @return   ESPrimitiveEntry
-     */
     private ESPrimitiveEntry mergeCurrentESPrimitiveEntryData(String output, ESEntry entity) {
         Map<Object, Object> currentMap = ContextHolder.get().getData().computeIfAbsent(output, o -> new HashMap<>());
         ESPrimitiveEntry current = (ESPrimitiveEntry) currentMap.computeIfAbsent(entity.getKey(), o -> new ESPrimitiveEntry(output, entity.getOperation()));
@@ -309,24 +215,8 @@ public class CollectorImpl implements Collector {
         return current;
     }
 
-    /**
-     * executorQuery
-     *
-     * @Date     2019/7/8 下午3:06
-     * @Author   ddphin
-     *
-     * @param    output
-     * @param    properties
-     * @param    executor
-     * @param    ms
-     * @param    method
-     * @param    k
-     * @param    v
-     * @return   java.util.Map<java.lang.String,java.lang.Object>
-     */
     private Map<String, Object> executorQuery(
             String output,
-            CollectorProperties properties,
             Executor executor,
             MappedStatement ms,
             String method,
@@ -335,18 +225,39 @@ public class CollectorImpl implements Collector {
         Map<String, Object> parameter = new HashMap<>();
         parameter.put(k, v);
 
-        String id = properties.getInputR().get(output)+"."+method;
+        String id = this.inputR.get(output)+"."+method;
         MappedStatement queryMs = ms.getConfiguration().getMappedStatement(id);
-        if (null != queryMs) {
-            List query = executor.query(
-                    queryMs,
-                    parameter,
-                    RowBounds.DEFAULT,
-                    Executor.NO_RESULT_HANDLER);
-            return CollectionUtils.isEmpty(query) ? null : (JSONObject) JSONObject.toJSON(query.get(0));
+        if (null == queryMs) {
+            queryMs = this.buildQueryMappedStatement(method, parameter, ms);
+        }
+        List query = executor.query(
+                queryMs,
+                parameter,
+                RowBounds.DEFAULT,
+                Executor.NO_RESULT_HANDLER);
+        return CollectionUtils.isEmpty(query) ? null : (JSONObject) JSONObject.toJSON(query.get(0));
+    }
+
+    private MappedStatement buildQueryMappedStatement(String sql, Object parameter, MappedStatement ms) {
+        String msId =  SqlCommandType.SELECT +"."+sql.hashCode();
+        if (hasMappedStatement(ms, msId)) {
+            return ms.getConfiguration().getMappedStatement(msId);
         }
         else {
-            return sqlExecutor.selectOne(method, parameter);
+            SqlSource sqlSource = ms.getConfiguration().getDefaultScriptingLanguageInstance().createSqlSource(ms.getConfiguration(), sql, parameter.getClass());
+            MappedStatement newMS = new MappedStatement.Builder(ms.getConfiguration(), msId, sqlSource, SqlCommandType.SELECT)
+                    .resultMaps(new ArrayList<ResultMap>() {
+                        {
+                            add(new ResultMap.Builder(ms.getConfiguration(), "defaultResultMap", Map.class, new ArrayList<>(0)).build());
+                        }
+                    })
+                    .build();
+            //缓存
+            ms.getConfiguration().addMappedStatement(ms);
+            return newMS;
         }
+    }
+    private boolean hasMappedStatement(MappedStatement ms, String msId) {
+        return ms.getConfiguration().hasStatement(msId, false);
     }
 }

@@ -1,34 +1,35 @@
 package com.ddphin.ddphin.collector.requestbody.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.ddphin.ddphin.collector.configuration.CollectorProperties;
 import com.ddphin.ddphin.collector.context.ContextHolder;
 import com.ddphin.ddphin.collector.context.ESNestedEntry;
 import com.ddphin.ddphin.collector.context.ESPrimitiveCollection;
 import com.ddphin.ddphin.collector.context.ESPrimitiveEntry;
-import com.ddphin.ddphin.collector.requestbody.RequestBodyBuilder;
 import com.ddphin.ddphin.collector.entity.ESSyncItemOutputItem;
 import com.ddphin.ddphin.collector.entity.ESSyncItemOutputItemHas;
+import com.ddphin.ddphin.collector.entity.ESSyncProperties;
+import com.ddphin.ddphin.collector.requestbody.RequestBodyBuilder;
 import org.apache.ibatis.mapping.SqlCommandType;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * ClassName: RequestBodyBuilderImpl
- * Function:  RequestBodyBuilderImpl
+ * ClassName: DefaultRequestBodyBuilder
+ * Function:  DefaultRequestBodyBuilder
  * Date:      2019/7/5 下午3:55
  * Author     DaintyDolphin
  * Version    V1.0
  */
-@Service
-public class RequestBodyBuilderImpl implements RequestBodyBuilder {
-    @Autowired
-    private CollectorProperties properties;
 
+public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
+    private Map<String, ESSyncItemOutputItem> outputMap;
+
+    public DefaultRequestBodyBuilder(ESSyncProperties properties) {
+        this.outputMap = properties.getOutput();
+    }
+    
     @Override
     public String buildBulkRequestBody() {
         @SuppressWarnings("unchecked")
@@ -36,7 +37,7 @@ public class RequestBodyBuilderImpl implements RequestBodyBuilder {
 
         StringBuilder sb = new StringBuilder();
         list.forEach(data -> {
-            ESSyncItemOutputItem item = properties.getOutput().get(data.get__name());
+            ESSyncItemOutputItem item = this.outputMap.get(data.get__name());
             String index = data.get__name();
             String id = String.valueOf(data.get(item.getKey()));
             sb.append(genSource(index, id, data));
@@ -79,7 +80,7 @@ public class RequestBodyBuilderImpl implements RequestBodyBuilder {
 
     private String genNestedUpdate(String path, String key, ESNestedEntry parent, ESNestedEntry data, Map<Object, Object> params) {
         StringBuilder sb = new StringBuilder();
-        ESSyncItemOutputItem item = properties.getOutput().get(data.get__name());
+        ESSyncItemOutputItem item = this.outputMap.get(data.get__name());
 
         Map<String, Object> param = new HashMap<>();
         param.put(this.getKey(parent, data), this.getKeyValue(parent, data));
@@ -91,7 +92,7 @@ public class RequestBodyBuilderImpl implements RequestBodyBuilder {
             if (null != item.getHas()) {
                 item.getHas().forEach((k, v) -> {
                     if (ESSyncItemOutputItemHas.WithType.primitive.equals(v.getWithType())) {
-                        properties.getOutput().get(k).getMap().forEach((m, n) -> fields.put(n, null));
+                        this.outputMap.get(k).getMap().forEach((m, n) -> fields.put(n, null));
                     }
                 });
             }
@@ -103,7 +104,7 @@ public class RequestBodyBuilderImpl implements RequestBodyBuilder {
             });
 
             data.get__remove_operation().forEach((k, v) -> {
-                ESSyncItemOutputItem hasItem = properties.getOutput().get(k);
+                ESSyncItemOutputItem hasItem = this.outputMap.get(k);
                 hasItem.getMap().forEach((m, n) -> sb.append(String.format("%s.remove('%s');", path, n)));
             });
         }
@@ -116,7 +117,7 @@ public class RequestBodyBuilderImpl implements RequestBodyBuilder {
 
     private String genNestedHas(String path, String prefix, ESNestedEntry data, Map<Object, Object> params) {
         StringBuilder sb = new StringBuilder();
-        ESSyncItemOutputItem item = properties.getOutput().get(data.get__name());
+        ESSyncItemOutputItem item = this.outputMap.get(data.get__name());
         item.getHas().forEach((k, v) -> {
             if (ESSyncItemOutputItemHas.WithType.array.equals(v.getWithType())) {
                 sb.append(this.genNestedHasPrimitive(v, path, prefix, data, params));
@@ -187,7 +188,7 @@ public class RequestBodyBuilderImpl implements RequestBodyBuilder {
     private String genNestedDelete(String path, String prefix, ESNestedEntry parent, ESNestedEntry data, Map<Object, Object> params) {
         StringBuilder sb = new StringBuilder();
 
-        ESSyncItemOutputItem parentItem = properties.getOutput().get(parent.get__name());
+        ESSyncItemOutputItem parentItem = this.outputMap.get(parent.get__name());
         ESSyncItemOutputItemHas has = parentItem.getHas().get(data.get__name());
         if (null == data.get(has.getUniqueBy())) {
             sb.append(String.format("%s=[];", path));
@@ -247,10 +248,10 @@ public class RequestBodyBuilderImpl implements RequestBodyBuilder {
     }
     private String getKey(ESNestedEntry parent, ESNestedEntry data) {
         if (null == parent) {
-            return properties.getOutput().get(data.get__name()).getKey();
+            return this.outputMap.get(data.get__name()).getKey();
         }
         else {
-            return properties.getOutput().get(parent.get__name()).getHas().get(data.get__name()).getUniqueBy();
+            return this.outputMap.get(parent.get__name()).getHas().get(data.get__name()).getUniqueBy();
         }
     }
 }
