@@ -11,10 +11,8 @@ import lombok.Data;
  */
 @Data
 public class ESVersion {
-    private Long logId;
-    private String id;
     private String index;
-    private String context;
+    private String id;
     private Long seqNo;
     private Long primaryTerm;
 }
