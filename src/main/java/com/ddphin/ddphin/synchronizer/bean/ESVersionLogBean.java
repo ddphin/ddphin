@@ -11,6 +11,7 @@ import lombok.Data;
  */
 @Data
 public class ESVersionLogBean extends ESVersionBean {
+    private Long lid;
     private Long logId;
     private String context;
     private String message;

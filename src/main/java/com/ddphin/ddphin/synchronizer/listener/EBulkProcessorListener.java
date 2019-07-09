@@ -43,6 +43,7 @@ public class EBulkProcessorListener implements BulkProcessor.Listener {
                 BulkItemResponse response = bulkResponse.getItems()[i];
 
                 ESVersionLogBean bean = new ESVersionLogBean();
+                bean.setLid(l);
                 bean.setIndex(request.index());
                 bean.setId(request.id());
                 bean.setContext(request.toString());
@@ -72,6 +73,7 @@ public class EBulkProcessorListener implements BulkProcessor.Listener {
                 DocWriteRequest<?> request = bulkRequest.requests().get(i);
 
                 ESVersionLogBean bean = new ESVersionLogBean();
+                bean.setLid(l);
                 bean.setIndex(request.index());
                 bean.setId(request.id());
                 bean.setContext(request.toString());
