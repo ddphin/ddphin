@@ -44,12 +44,12 @@ public class CollectorInterceptor implements Interceptor {
         ESSyncProperties.Point point = this.point.get(ms.getSqlCommandType());
         String output = this.input.get(inputKey);
 
-        if (null != output && ESSyncProperties.Point.before.equals(point)) {
+        if (this.point.containsKey(ms.getSqlCommandType()) &&  null != output && ESSyncProperties.Point.before.equals(point)) {
             this.process(args[1], this.input.get(inputKey), executor, ms);
         }
         Object o = invocation.proceed();
 
-        if (null != output && ESSyncProperties.Point.after.equals(point)) {
+        if (this.point.containsKey(ms.getSqlCommandType()) &&  null != output && ESSyncProperties.Point.after.equals(point)) {
             this.process(args[1], this.input.get(inputKey), executor, ms);
         }
         return o;
