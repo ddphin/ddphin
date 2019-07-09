@@ -47,6 +47,7 @@ public class EBulkProcessorListener implements BulkProcessor.Listener {
                 bean.setIndex(request.index());
                 bean.setId(request.id());
                 bean.setContext(request.toString());
+
                 if (response.isFailed()) {
                     bean.setStatus(1);
                     bean.setMessage(response.getFailureMessage());
@@ -55,7 +56,13 @@ public class EBulkProcessorListener implements BulkProcessor.Listener {
                     bean.setStatus(0);
                     bean.setPrimaryTerm(response.getResponse().getPrimaryTerm());
                     bean.setSeqNo(response.getResponse().getSeqNo());
-                    versionList.add(bean);
+
+                    ESVersionBean versionBean = new ESVersionBean();
+                    versionBean.setIndex(request.index());
+                    versionBean.setId(request.id());
+                    versionBean.setPrimaryTerm(response.getResponse().getPrimaryTerm());
+                    versionBean.setSeqNo(response.getResponse().getSeqNo());
+                    versionList.add(versionBean);
                 }
                 logList.add(bean);
             }
