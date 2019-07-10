@@ -131,6 +131,20 @@ public class DefaultCollector implements Collector {
             this.collect(associationEntity, outputItem.getAssociation().getBelongs().getTo(), executor, ms);
         }
         else {
+            if (null != outputItem.getReload()) {
+                Map<String, Object> rs = this.executorQuery(
+                        output,
+                        executor,
+                        ms,
+                        outputItem.getReload().getQuery(),
+                        outputItem.getReload().getWith(),
+                        entity.getWithOfReload());
+                if (null == rs ) {
+                    return;
+                }
+                this.reloadESEntity(rs, entity, outputItem);
+            }
+
             ESNestedEntry entry = this.mergeCurrentESNestedEntryData(output, entity);
             ContextHolder.get().getValue().add(entity.getKey(), entry);
         }
