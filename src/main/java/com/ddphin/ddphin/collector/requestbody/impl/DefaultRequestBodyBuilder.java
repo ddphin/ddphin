@@ -31,7 +31,7 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
     }
     
     @Override
-    public String buildBulkRequestBody() {
+    public String build() {
         @SuppressWarnings("unchecked")
         Collection<ESNestedEntry> list = (Collection<ESNestedEntry>) ContextHolder.get().getValue();
 

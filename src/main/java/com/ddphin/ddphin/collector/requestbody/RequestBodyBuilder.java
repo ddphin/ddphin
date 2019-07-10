@@ -8,5 +8,5 @@ package com.ddphin.ddphin.collector.requestbody;
  * Version    V1.0
  */
 public interface RequestBodyBuilder {
-    String buildBulkRequestBody();
+    String build();
 }

@@ -36,7 +36,7 @@ public class SynchronizerInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable Exception ex) throws IOException {
         if (null == ex) {
-            String body = requestBodyBuilder.buildBulkRequestBody();
+            String body = requestBodyBuilder.build();
             bulkRequestBodyTransmitor.transmit(body);
         }
         ContextHolder.remove();
