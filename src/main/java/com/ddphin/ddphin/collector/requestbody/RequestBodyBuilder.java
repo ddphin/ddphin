@@ -1,5 +1,9 @@
 package com.ddphin.ddphin.collector.requestbody;
 
+import com.ddphin.ddphin.collector.entity.ESSyncItemOutputItem;
+
+import java.util.Map;
+
 /**
  * ClassName: RequestBodyBuilder
  * Function:  RequestBodyBuilder
@@ -9,4 +13,5 @@ package com.ddphin.ddphin.collector.requestbody;
  */
 public interface RequestBodyBuilder {
     String build();
+    void setOutputMap(Map<String, ESSyncItemOutputItem> outputMap);
 }

@@ -27,9 +27,14 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
     private Map<String, ESSyncItemOutputItem> outputMap;
 
     public DefaultRequestBodyBuilder(ESSyncProperties properties) {
-        this.outputMap = properties.getOutput();
+        this.setOutputMap(properties.getOutput());
     }
-    
+
+    @Override
+    public void setOutputMap(Map<String, ESSyncItemOutputItem> outputMap) {
+        this.outputMap = outputMap;
+    }
+
     @Override
     public String build() {
         @SuppressWarnings("unchecked")
