@@ -16,17 +16,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * ClassName: DefaultRequestBodyBuilder
- * Function:  DefaultRequestBodyBuilder
+ * ClassName: DefaultBulkRequestBodyBuilder
+ * Function:  DefaultBulkRequestBodyBuilder
  * Date:      2019/7/5 下午3:55
  * Author     DaintyDolphin
  * Version    V1.0
  */
 
-public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
+public class DefaultBulkRequestBodyBuilder implements RequestBodyBuilder {
     private Map<String, ESSyncItemOutputItem> outputMap;
 
-    public DefaultRequestBodyBuilder(ESSyncProperties properties) {
+    public DefaultBulkRequestBodyBuilder(ESSyncProperties properties) {
         this.setOutputMap(properties.getOutput());
     }
 

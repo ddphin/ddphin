@@ -1,6 +1,6 @@
 package com.ddphin.ddphin.collector.interceptor;
 
-import com.ddphin.ddphin.transmitor.BulkRequestBodyTransmitor;
+import com.ddphin.ddphin.transmitor.RequestBodyTransmitor;
 import com.ddphin.ddphin.collector.context.ContextHolder;
 import com.ddphin.ddphin.collector.requestbody.RequestBodyBuilder;
 import org.springframework.lang.Nullable;
@@ -20,10 +20,10 @@ import java.io.IOException;
 
 public class SynchronizerInterceptor implements HandlerInterceptor {
     private RequestBodyBuilder requestBodyBuilder;
-    private BulkRequestBodyTransmitor bulkRequestBodyTransmitor;
+    private RequestBodyTransmitor requestBodyTransmitor;
 
-    public SynchronizerInterceptor(RequestBodyBuilder requestBodyBuilder, BulkRequestBodyTransmitor bulkRequestBodyTransmitor) {
-        this.bulkRequestBodyTransmitor = bulkRequestBodyTransmitor;
+    public SynchronizerInterceptor(RequestBodyBuilder requestBodyBuilder, RequestBodyTransmitor bulkRequestBodyTransmitor) {
+        this.requestBodyTransmitor = bulkRequestBodyTransmitor;
         this.requestBodyBuilder = requestBodyBuilder;
     }
 
@@ -37,7 +37,7 @@ public class SynchronizerInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable Exception ex) throws IOException {
         if (null == ex) {
             String body = requestBodyBuilder.build();
-            bulkRequestBodyTransmitor.transmit(body);
+            requestBodyTransmitor.transmit(body);
         }
         ContextHolder.remove();
     }

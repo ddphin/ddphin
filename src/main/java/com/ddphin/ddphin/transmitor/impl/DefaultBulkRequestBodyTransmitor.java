@@ -1,7 +1,7 @@
 package com.ddphin.ddphin.transmitor.impl;
 
 import com.ddphin.ddphin.synchronizer.requester.ESRequester;
-import com.ddphin.ddphin.transmitor.BulkRequestBodyTransmitor;
+import com.ddphin.ddphin.transmitor.RequestBodyTransmitor;
 
 import java.io.IOException;
 
@@ -13,14 +13,14 @@ import java.io.IOException;
  * Version    V1.0
  */
 
-public class DefaultBulkRequestBodyTransmitor implements BulkRequestBodyTransmitor {
+public class DefaultBulkRequestBodyTransmitor implements RequestBodyTransmitor {
     private ESRequester esRequester;
 
     public DefaultBulkRequestBodyTransmitor(ESRequester esRequester) {
         this.esRequester = esRequester;
     }
     @Override
-    public void transmit(String bulkRequestBody) throws IOException {
-        esRequester.bulkRequest(bulkRequestBody);
+    public void transmit(String requestBody) throws IOException {
+        esRequester.bulkRequest(requestBody);
     }
 }

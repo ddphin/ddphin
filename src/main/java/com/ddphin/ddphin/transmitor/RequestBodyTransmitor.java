@@ -9,6 +9,6 @@ import java.io.IOException;
  * Author     DaintyDolphin
  * Version    V1.0
  */
-public interface BulkRequestBodyTransmitor {
-    void transmit(String bulkRequestBody) throws IOException;
+public interface RequestBodyTransmitor {
+    void transmit(String requestBody) throws IOException;
 }
