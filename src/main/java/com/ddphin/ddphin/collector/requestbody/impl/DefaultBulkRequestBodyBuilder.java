@@ -42,9 +42,8 @@ public class DefaultBulkRequestBodyBuilder implements RequestBodyBuilder {
 
         StringBuilder sb = new StringBuilder();
         list.forEach(data -> {
-            ESSyncItemOutputItem item = this.outputMap.get(data.get__name());
             String index = data.get__name();
-            String id = String.valueOf(data.get(item.getKey()));
+            String id = String.valueOf(this.getKeyValue(null, data));
             sb.append(genSource(index, id, data));
 
         });
@@ -248,7 +247,13 @@ public class DefaultBulkRequestBodyBuilder implements RequestBodyBuilder {
         }
     }
     private Object getKeyValue(ESNestedEntry parent, ESNestedEntry data) {
-        return data.get(this.getKey(parent, data));
+        Object value = data.get(this.getKey(parent, data));
+        if (value instanceof  Map) {
+            return ((Map)value).get("input");
+        }
+        else {
+            return value;
+        }
 
     }
     private String getKey(ESNestedEntry parent, ESNestedEntry data) {

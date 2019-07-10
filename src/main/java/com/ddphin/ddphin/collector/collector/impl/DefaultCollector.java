@@ -131,23 +131,39 @@ public class DefaultCollector implements Collector {
             this.collect(associationEntity, outputItem.getAssociation().getBelongs().getTo(), executor, ms);
         }
         else {
-            if (null != outputItem.getReload()) {
-                Map<String, Object> rs = this.executorQuery(
-                        output,
-                        executor,
-                        ms,
-                        outputItem.getReload().getQuery(),
-                        outputItem.getReload().getWith(),
-                        entity.getWithOfReload());
-                if (null == rs ) {
-                    return;
-                }
-                this.reloadESEntity(rs, entity, outputItem);
+            if (!this.mergeESEntry(entity, output, executor, ms)) {
+                return;
             }
 
             ESNestedEntry entry = this.mergeCurrentESNestedEntryData(output, entity);
             ContextHolder.get().getValue().add(entity.getKey(), entry);
         }
+    }
+
+    private Boolean mergeESEntry(
+            ESEntry entity,
+            String output,
+            Executor executor,
+            MappedStatement ms) throws SQLException {
+
+        ESSyncItemOutputItem outputItem = this.outputMap.get(output);
+        if (null != outputItem.getReload()) {
+            if (null == entity.getWithOfReload()) {
+                return false;
+            }
+            Map<String, Object> rs = this.executorQuery(
+                    output,
+                    executor,
+                    ms,
+                    outputItem.getReload().getQuery(),
+                    outputItem.getReload().getWith(),
+                    entity.getWithOfReload());
+            if (null == rs ) {
+                return false;
+            }
+            this.reloadESEntity(rs, entity, outputItem);
+        }
+        return true;
     }
 
     private Boolean mergeESEntryAssociation(
@@ -173,21 +189,11 @@ public class DefaultCollector implements Collector {
                 return false;
             }
             this.reloadESEntity(rs, entity, outputItem);
+            return true;
         }
-        else if (null != outputItem.getReload()) {
-            Map<String, Object> rs = this.executorQuery(
-                    output,
-                    executor,
-                    ms,
-                    outputItem.getReload().getQuery(),
-                    outputItem.getReload().getWith(),
-                    entity.getWithOfReload());
-            if (null == rs ) {
-                return false;
-            }
-            this.reloadESEntity(rs, entity, outputItem);
+        else {
+            return this.mergeESEntry(entity, output, executor, ms);
         }
-        return true;
     }
 
     private void reloadESEntity(Map<String, Object> map, ESEntry entity, ESSyncItemOutputItem outputItem) {
@@ -200,14 +206,17 @@ public class DefaultCollector implements Collector {
             entity.setWithOfReload(map.get(outputItem.getReload().getWith()));
         }
         for (Map.Entry<String, String> m : outputItem.getMap().entrySet()) {
-            if (m.getValue().endsWith(".weight")) {
+            if (m.getValue().endsWith(".input")) {
                 String[] v = m.getValue().split("\\.");
-                if (null != map.get(v[0])) {
-                    Map<String, Object> wmap = new HashMap<>();
-                    wmap.put("weight", map.get(m.getKey()));
-                    wmap.put("input", map.get(v[0]));
-                    entity.put(v[1], wmap);
-                }
+                @SuppressWarnings("unchecked")
+                Map<String, Object> submap = (Map<String, Object>) entity.computeIfAbsent(v[0], o -> new HashMap<>());
+                submap.put("input", map.get(m.getKey()));
+            }
+            else if (m.getValue().endsWith(".weight")) {
+                String[] v = m.getValue().split("\\.");
+                @SuppressWarnings("unchecked")
+                Map<String, Object> submap = (Map<String, Object>) entity.computeIfAbsent(v[0], o -> new HashMap<>());
+                submap.put("weight", map.get(m.getKey()));
             }
             else {
                 entity.put(m.getValue(), map.get(m.getKey()));
