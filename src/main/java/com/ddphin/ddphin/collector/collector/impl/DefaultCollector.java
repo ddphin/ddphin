@@ -186,7 +186,18 @@ public class DefaultCollector implements Collector {
             entity.setWithOfReload(map.get(outputItem.getReload().getWith()));
         }
         for (Map.Entry<String, String> m : outputItem.getMap().entrySet()) {
-            entity.put(m.getValue(), map.get(m.getKey()));
+            if (m.getValue().endsWith(".weight")) {
+                String[] v = m.getValue().split(".");
+                if (null != map.get(v[0])) {
+                    Map<String, Object> wmap = new HashMap<>();
+                    wmap.put("weight", map.get(m.getKey()));
+                    wmap.put("input", map.get(v[0]));
+                    entity.put(v[1], wmap);
+                }
+            }
+            else {
+                entity.put(m.getValue(), map.get(m.getKey()));
+            }
         }
     }
 

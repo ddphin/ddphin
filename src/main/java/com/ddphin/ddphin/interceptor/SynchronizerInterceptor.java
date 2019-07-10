@@ -1,4 +1,4 @@
-package com.ddphin.ddphin.collector.interceptor;
+package com.ddphin.ddphin.interceptor;
 
 import com.ddphin.ddphin.transmitor.RequestBodyTransmitor;
 import com.ddphin.ddphin.collector.context.ContextHolder;

@@ -1,4 +1,4 @@
-package com.ddphin.ddphin.collector.interceptor;
+package com.ddphin.ddphin.interceptor;
 
 /**
  * ClassName: CollectorInterceptor
