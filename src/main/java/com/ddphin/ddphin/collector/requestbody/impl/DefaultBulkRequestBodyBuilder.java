@@ -239,12 +239,14 @@ public class DefaultBulkRequestBodyBuilder implements RequestBodyBuilder {
         return this.getParamKey(prefix, String.valueOf(data.getValue()), data.get__name());
     }
     private String getParamKey(String prefix, String key, String name) {
+        String paramKey;
         if (null != prefix) {
-            return prefix + "_" + name + "_" + key;
+            paramKey = prefix + "_" + name + "_" + key;
         }
         else {
-            return name + "_" + key;
+            paramKey = name + "_" + key;
         }
+        return "KEY_"+paramKey.hashCode();
     }
     private Object getKeyValue(ESNestedEntry parent, ESNestedEntry data) {
         Object value = data.get(this.getKey(parent, data));
