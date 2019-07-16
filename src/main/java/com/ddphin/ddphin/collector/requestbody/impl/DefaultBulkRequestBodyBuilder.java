@@ -246,7 +246,7 @@ public class DefaultBulkRequestBodyBuilder implements RequestBodyBuilder {
         else {
             paramKey = name + "_" + key;
         }
-        return "KEY_"+paramKey.hashCode();
+        return "k_"+ Integer.toUnsignedString(paramKey.hashCode());
     }
     private Object getKeyValue(ESNestedEntry parent, ESNestedEntry data) {
         Object value = data.get(this.getKey(parent, data));
