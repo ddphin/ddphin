@@ -143,7 +143,7 @@ public class DefaultBulkRequestBodyBuilder implements RequestBodyBuilder {
                 if (o.get__operation().equals(SqlCommandType.INSERT)) {
                     sb.append(this.genPrimitiveInsert(newPath, key, o, params));
                 }
-                else if (o.get__operation().equals(SqlCommandType.UPDATE)) {
+                else if (o.get__operation().equals(SqlCommandType.DELETE)) {
                     sb.append(this.genPrimitiveDelete(newPath, key, o, params));
                 }
             });
